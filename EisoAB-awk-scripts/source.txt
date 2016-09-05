@@ -1,5 +1,6 @@
 Author: Eiso AB
 http://www.nmr.chem.uu.nl/~eiso/help/
 
-Many useful scripts. 
+Many useful awk scripts.
+
 
