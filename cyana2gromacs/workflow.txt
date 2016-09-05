@@ -1,0 +1,14 @@
+This part helps you to prepare files for gromacs to run simulated (cartesian) annealing to obtain more realistic structures and check which restraints are problematic. 
+
+You will probably work with NOE restraints, so you have to be sure which hydrogen is which, check if all hydrogen atoms are in your .pdb (some problematic are charged residues - ARG,ASP,GLU,HIS,LYS, and C-/N-terminal end). Moreover, you should separate models from .pdb to separate files before converting them to gromacs. However, forcefield "6: AMBER99SB-ILDN protein, nucleic AMBER94 (Lindorff-Larsen et al., Proteins 78, 1950-58, 2010)" in gromacs does not work with iupac nomenclature too, so the script renamed -CH2- groups from H2 and H3 to H2 and H1, (3 -> 1), e.g.:
+SER HB2 -> SER HB2
+SER HB3 -> SER HB1
+
+Note, that ILE CD1 will be renamed to CD (as well as HD1[1-3] -> HD[1-3]) automatically.
+In the same manner you want to rename NOE distance file from cyana, .upl (.lol). 
+
+(cyana -> rename -> open in chimera, correct HIS, save models in separate pdb -> gromacs: gmx pdg2gmx) 
+
+Use scripts cyana-aco2gromacs.sh and cyana-upl2gromacs.sh for preparing dihedral and distance constraints for gromacs but, at first, you will need convert your pdb to gromacs to know the numbering of atoms. 
+
+In our lab, we have good experience with lengthening the NOEs obtained from ARIA by 1.5 A and by CYANA by 1 A.

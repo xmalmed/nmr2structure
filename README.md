@@ -14,6 +14,10 @@ Scripts for...
 * extracting results and running some statistics at [iCING](https://nmr.le.ac.uk/icing)
 * conversions to NMRStar 3.1 format (.cif) for uploading your results to the databases [BMRB](http://www.bmrb.wisc.edu/) and [PDB](http://www.rcsb.org/pdb/home/home.do) 
 
+## Future plans
+
+* I am going to add examples. 
+
 ## Start with GIT:
 [Practical short online course on CodeAcademy](https://www.codecademy.com/learn/learn-git)
 

@@ -1,0 +1,52 @@
+These scripts are prepared for simulated annealing of cyana structures. You obtain ~20 structures and for each will be run whole process.
+
+(Different approach is to select a few structures and change starting conditions of annealing.)
+ 
+First, you want to import .pdb to gromacs:
+- atoms should be already renamed
+- script topology.sh convert and prepare pdb for any MD in gromacs
+-- prepare periodic box, solvent, compensate charge, add salt, and minimize system.
+
+Secondly, you should run equilibration.sh script, which introduce temperature, pressure into the system. 
+
+Third, script warming.sh warm the system to high temperature (1000K), which is starting point for cooling to 0K (final static structure in some energy minimum). For some statistic, you should obtain at least 20 structures. 
+
+Fourth, run script cooling.sh, which prepares MD runs in Metacentrum http://www.metacentrum.cz/en/ with Infinity https://lcc.ncbr.muni.cz/whitezone/development/infinity/
+Most likely, you will want to write your script for run MD
+Now, you can upload these files and run MD. 
+
+Finaly, you can use iCING web server, which can provide several statistic above pdb models with restraints.  
+Use script gromacs2iCING.sh
+
+Example of script to run 4 runs simultaneously with 4 CPUs:
+-----------------------------------------------------------
+#!/bin/bash
+
+#for local run on 4 cpu. It will take a several hours on notebook.
+for i in {1,5,9,13,17}; do
+
+    ./topology.sh $i       >> log${i}.txt &
+    ./topology.sh $((i+1)) >> log$((i+1)).txt &
+    ./topology.sh $((i+2)) >> log$((i+2)).txt &
+    ./topology.sh $((i+3)) >> log$((i+3)).txt &
+    wait
+    ./equilibration.sh $i       >> log${i}.txt &
+    ./equilibration.sh $((i+1)) >> log$((i+1)).txt &
+    ./equilibration.sh $((i+2)) >> log$((i+2)).txt &
+    ./equilibration.sh $((i+3)) >> log$((i+3)).txt &
+    wait
+    ./warming.sh $i       >> log${i}.txt &
+    ./warming.sh $((i+1)) >> log$((i+1)).txt &
+    ./warming.sh $((i+2)) >> log$((i+2)).txt &
+    ./warming.sh $((i+3)) >> log$((i+3)).txt &
+    wait    
+
+done
+
+./cooling.sh 
+
+scp -r cooling-* cluster_name:/path 
+-----------------------------------------------------------
+
+
+

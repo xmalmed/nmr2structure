@@ -1,0 +1,5 @@
+Author: Eiso AB
+http://www.nmr.chem.uu.nl/~eiso/help/
+
+Many useful scripts, not tested. 
+

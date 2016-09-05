@@ -1,0 +1,85 @@
+Cyana using XEASY format, which can be directly exported by SPARKY, shortcut 'xe', you just need adjust headers for peaks/spectra files like:
+    # Number of dimensions 3
+    #FORMAT xeasy3D
+    #INAME 1 H
+    #INAME 2 N
+    #INAME 3 HN
+    #SPECTRUM N15NOESY  H N HN
+
+Moreover, you need file with whole sequence in format:
+    GLY -2
+    SER -1
+    ASP 0
+    ALA 1
+    ...
+However, Cyana does not use IUPAC atom notation of amino-acids. So, file with atom resonances should be convert for CYANA by the script sparky2cyana.sh.
+You can use except NOESY spectra dihedral angles for structure calculation. Program TALOS can derive torsion angles PHI, PSI from resonances a input file in NMRPipe format can be obtain at the same time by previous script (use flag -t, output file xxx.tab). 
+
+Dihedrals PHI, PSI can be obtain from TALOS-N (the newest) based on chemical shifts Ca,Cb,CO,HA[23-for GLY],HN,N.
+I used only predictions in category "Strong" and there is still up to 3.5% of misleading dihedrals. So, don't worry to trust to all of them.
+Use program RAMA (together with TALOS) to visualize dihedrals from TALOS and you can save dihedrals in CYANA format (.aco file)
+
+Note... again, header is important for TALOS-N:
+       DATA FIRST_RESID -2
+
+       DATA SEQUENCE GSDALALDLDGD......
+
+       VARS   RESID RESNAME ATOMNAME SHIFT
+       FORMAT %4d   %1s     %4s      %8.3f
+        0	D	C	175.558
+        0	D	CA	53.134
+        0	D	CB	43.827
+        0	D	HA	6.077
+        1	A	C	177.681
+        1	A	CA	52.266
+        1	A	CB	23.209
+        1	A	HN	8.604
+        1	A	HA	5.082
+        1	A	N	119.059
+ 
+At this point, you should have files with peaks from spectra (XEASY format, xxx.peaks), list of resonances for atoms (XEASY format in CYANA notation, xxx.prot), sequence file (xxx.seq), and optionally dihedral angles from TALOS (xxx.aco).
+
+Run cyana like: 
+> cyana AUTO.cya
+
+AUTO.cya:
+-----------------------------------------------------------------------------------------------
+cyanalib                                      # read standard CYANA residue library 
+read seq protein.seq                          # read amino acid sequence
+name        := protein
+rmsdrange   := 1..15,37..170                  # define residue range for RMSD calculations
+nproc       := 4                              # number of CPU
+
+peaks       := HCH-aliphatic.peaks,HNH.peaks  # NOESY peak lists in XEASY format
+prot        := protein.prot                   # names of chemical shift lists
+restraints  := protein.aco                    # additional restraints, dihedrals from TALOS
+tolerance   := 0.020,0.020,0.60,0.60          # shift tolerances: H, H', C/N', C/N
+structures  := 100,20                         # number of initial, final structures
+steps       := 10000                          # number of torsion angle dynamics steps
+randomseed  := 20160405                       # random number generator seed; e.g. date yyyymmdd
+
+noeassign peaks=$peaks prot=$prot autoaco     # perform NOESY assignment/structure calculation
+-------------------------------------------------------------------------------------------------
+
+I will recommend to run several runs and compare obtained NOE restraints... check some alone ones and unique (from only 1 run). Also, too tight tolerances can lead to misleading NOEs, which can be dangerous. Especially, 15N shifts of ASN,GLN side-chains can vary a lot between HSQC and 15N-NOESY (for sure, align them according to 15N-NOESY...)
+Then you can run re-run in cyana with given restraints...
+cyana CALC.cya
+
+CYANA.cya:
+-----------------------------------------------------------------------------------------------
+cyanalib                                  # read standard CYANA residue library 
+read seq protein.seq                      # read amino acid sequence
+name        :=protein-reCALC
+rmsdrange   := 1..15,37..170              # define residue range for RMSD calculations
+nproc       := 4                          # CPUs
+
+read upl final.upl
+read aco protein.aco
+
+calc_all 100 steps=10000
+
+overview final.txt structures=20 pdb
+-----------------------------------------------------------------------------------------------
+
+
+
