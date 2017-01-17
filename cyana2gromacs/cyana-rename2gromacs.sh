@@ -71,6 +71,7 @@ if [ $flagS == 1 ]; then
     
     sed -e '
     /^ATOM/ s/HG13 ILE/HG11 ILE/
+    /^ATOM/ s/3HG1 ILE/1HG1 ILE/
     /^ATOM/ s/H3  PRO/H1  PRO/
     /^ATOM/ s/HB3 PRO/HB1 PRO/
     /^ATOM/ s/HG3 PRO/HG1 PRO/
