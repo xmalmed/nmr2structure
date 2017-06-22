@@ -13,10 +13,10 @@ Moreover, you need file with whole sequence in format:
     ALA 1
     ...
 However, Cyana does not use IUPAC atom notation of amino-acids. So, file with atom resonances should be convert for CYANA by the script sparky2cyana.sh.
-You can use except NOESY spectra dihedral angles for structure calculation. Program TALOS can derive torsion angles PHI, PSI from resonances a input file in NMRPipe format can be obtain at the same time by previous script (use flag -t, output file xxx.tab). 
+You can use also dihedral angles for structure calculation. Program TALOS can derive torsion angles PHI, PSI from resonances. A input file in NMRPipe format can be obtain at the same time by previous script (use flag -t, output file xxx.tab). 
 
 Dihedrals PHI, PSI can be obtain from TALOS-N (the newest) based on chemical shifts Ca,Cb,CO,HA[23-for GLY],HN,N.
-I used only predictions in category "Strong" and there is still up to 3.5% of misleading dihedrals. So, don't worry to trust to all of them.
+I used only predictions in category "Strong" and there is still up to 3.5% of misleading dihedrals. So, don't worry to not trust to all of them.
 Use program RAMA (together with TALOS) to visualize dihedrals from TALOS and you can save dihedrals in CYANA format (.aco file)
 
 Note... again, header is important for TALOS-N:
