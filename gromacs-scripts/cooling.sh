@@ -2,6 +2,7 @@
 # This script runs just once for all prepared files
 #
 # NOTE: due to a bug in distance restraints, only save option is to run MD on 1 CPU or 1 GPU... 
+# NOTE2: The bug should be repaired in new Gromacs versions since year 2018.
 # this script prepares file to be run in metacentrum with infinity on GPUs:
 
 
