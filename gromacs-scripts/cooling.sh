@@ -50,7 +50,7 @@ name="`awk '$1 == "name" {print $2}' $input `"
 
 dirName="`awk '$1 == "cooling_directory" {print $2}' $input `" 
 prevDirName="`awk '$1 == "warming_directory" {print $2}' $input `" 
-firstStructureDir="`awk '$1 == "equilibration_directory" {print $2}' $input `"
+firstStructureDir="`awk '$1 == "topology_directory" {print $2}' $input `"
 
 dihres="`awk '$1 == "dihedral_restraints" {print $2}' $input `"
 disres="`awk '$1 == "distance_restraints" {print $2}' $input `"
@@ -82,7 +82,7 @@ for i in ${prevDirName}-[0-9]* ; do
     cp $i/*.itp $i/*.top ${dirName}-${k}/
     cp $i/warm.gro  $i/warm.cpt ${dirName}-${k}/
     cp $dihres $disres ${dirName}-${k}/
-    cp $firstStructureDir-${k}/${name}.gro ${dirName}-${k}/start.gro
+    cp $firstStructureDir-${k}/start.gro ${dirName}-${k}/
     if [ -s export.ndx ]; then
         cp export.ndx ${dirName}-${k}/
     fi
