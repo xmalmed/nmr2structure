@@ -152,6 +152,8 @@ if [ $? -ne 0 ]; then exit; fi
 gmx trjconv -f ${name}-box-sol-ions-em.gro -s ${name}-box-sol-ions-em.tpr -o check.pdb -pbc mol -ur compact <<< 0
 if [ $? -ne 0 ]; then exit; fi
 
+gmx trjconv -f ${name}-box-sol-ions-em.gro -s ${name}-box-sol-ions-em.tpr -o start.gro -pbc mol -ur compact <<< 0
+
 echo ""
 echo "Check minimized structure, check.pdb!"
 echo ""
