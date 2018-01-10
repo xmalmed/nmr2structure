@@ -10,7 +10,7 @@
 
 show_help() {
 cat <<EOF
-Quickly warm the system in a high temperature.
+Continue with free MD from equlibrate state.
 
 Usage: `basename $0` -n number [-p parameters.txt] [-h]
 or:    `basename $0` number
@@ -64,30 +64,33 @@ echo "Reading parameters file $input "
 name="`awk '$1 == "name" {print $2}' $input `"
 
 dirName="`awk '$1 == "stability_directory" {print $2}' $input `" 
-prevDirName="`awk '$1 == "cooling_directory" {print $2}' $input `" 
+prevDirName="`awk '$1 == "equilibration_directory" {print $2}' $input `" 
+firstStructureDir="`awk '$1 == "topology_directory" {print $2}' $input `"
 
 dihres="`awk '$1 == "dihedral_restraints" {print $2}' $input `"
 disres="`awk '$1 == "distance_restraints" {print $2}' $input `"
 
 temp="`awk '$1 == "normal_temperature" {print $2}' $input `"
-tempCold="`awk '$1 == "cold_temperature" {print $2}' $input `"
+tempStart="`awk '$1 == "normal_temperature" {print $2}' $input `"
 #-----------------------------------------------------------
 j=50 # ps, delay to warm to 300 K
-MDsteps=100000000
+MDsteps=18000000  # 36ns  ;    #100000000  # 200ns
 MDps=$((MDsteps/500)) # dt = 0.002
 #-----------------------------------------------------------
 
-mkdir ${dirName}-$1
+mkdir ${dirName}-$number
 #topology and restraints
-cp ${prevDirName}-$1/*.top ${dirName}-$1/   # topop.top
-cp ${prevDirName}-$1/*.itp ${dirName}-$1/   # dihres.itp, disres.itp, posres.itp, ....
-cp ${prevDirName}-$1/*.ndx ${dirName}-$1/   # export.ndx
-cp $dihres ${dirName}-$1/
-cp $disres ${dirName}-$1/
+cp ${prevDirName}-$number/*.top ${dirName}-$number/   # topop.top
+cp ${prevDirName}-$number/*.itp ${dirName}-$number/   # dihres.itp, disres.itp, posres.itp, ....
+cp export.ndx ${dirName}-$number/   # export.ndx
+cp $dihres ${dirName}-$number/
+cp $disres ${dirName}-$number/
+
 
 #structure
-cp ${prevDirName}-$1/cold.gro ${prevDirName}-$1/last.gro ${prevDirName}-$1/cold.cpt ${dirName}-$1/ 
-cd ${dirName}-$1/
+cp $firstStructureDir-$number/start*.gro ${dirName}-$number/start.gro
+cp ${prevDirName}-$number/npt.gro ${prevDirName}-$number/npt.cpt ${dirName}-$number/ 
+cd ${dirName}-$number/
 
 #insert DIHRES restraints in the topology after #ifdef POSRES
 for top in *.{top,itp}; do
@@ -116,10 +119,10 @@ nsteps        = $MDsteps      ; 200 ns ; 1500 frames
 dt            = 0.002         ; 2 fs
 
 ; Output control
-nstxout        = 50000          ; save coordinates every 50.0 ps
-nstvout        = 50000          ; save velocities every  50.0 ps
-nstenergy      = 50000          ; save energies every    50.0 ps
-nstlog         = 50000          ; update log file every  50.0 ps
+nstxout        = 10000          ; save coordinates every 10.0 ps
+nstvout        = 10000          ; save velocities every  10.0 ps
+nstenergy      = 10000          ; save energies every    10.0 ps
+nstlog         = 10000          ; update log file every  10.0 ps
 ;energygrps    = Protein Non-Protein
 
 ; Neighbor searching
@@ -158,7 +161,7 @@ refcoord_scaling    = com
 annealing           = single single     ; for each tc-grps 
 annealing-npoints   = 3 3               ; # of points (temp) for each group ... 2 = starting, end temp.
 annealing-time      = 0 ${j} $MDps 0 ${j} $MDps   ; ps, times when the given temp should be reach
-annealing-temp      = $tempCold $temp $temp $tempCold $temp $temp  ; K, temps for each ann.-npoints
+annealing-temp      = $tempStart $temp $temp $tempStart $temp $temp  ; K, temps for each ann.-npoints
 
 ; Velocity generation
 gen_vel     = no         ; assign velocities from Maxwell distribution; 
@@ -176,20 +179,19 @@ disre-weighting = equal
 disre-mixed     = no
 disre-fc        = 0          ; kJ / mol / nm2 * factor (weight)
 disre-tau       = 0             ; ps
-nstdisreout     = 50000          ; steps, write to energy file
+nstdisreout     = 10000          ; steps, write to energy file
 orire           = no            ; orientation restraints
 " > stability.mdp
 
 # 1. submit
 cat <<< '#!/bin/bash
 # run as:    
-# psubmit ncbr_medium md-run.sh ncpus=8,mem=4gb,scratch=10gb,walltime=5d
+# psubmit gpu_long md-run.sh ngpus=1,ncpus=1,mem=4gb,worksize=20gb,walltime=144h,props=^cl_konos 
 
-metamodule add gromacs-5.1.1 
-export OMP_NUM_THREADS=8
+metamodule add gromacs-5.0.5-gpu 
 
-gmx grompp -f stability.mdp -c cold.gro -t cold.cpt -p topol.top -o stability.tpr
-gmx mdrun -deffnm stability -ntmpi 1 -ntomp 8
+gmx grompp -f stability.mdp -c npt.gro -t npt.cpt -p topol.top -o stability.tpr
+gmx mdrun -deffnm stability 
 
 ./convertTRR.sh
 ' > md-run.sh
@@ -198,12 +200,12 @@ gmx mdrun -deffnm stability -ntmpi 1 -ntomp 8
 cat <<< "#!/bin/bash
 #TRR postprocessing
 
-metamodule add gromacs-5.1.1 
+metamodule add gromacs-5.0.5-gpu
 
 gmx convert-tpr -s stability.tpr -o final.tpr -n export.ndx
 
 #transform trajectory ... strip away solvent and remove jumps (based on first structure)
-gmx trjconv -f stability.trr -n export.ndx -s last.gro -o tmp-noJump.trr -pbc nojump
+gmx trjconv -f stability.trr -n export.ndx -s start.gro -o tmp-noJump.trr -pbc nojump
 
 
 gmx trjconv -f tmp-noJump.trr -s final.tpr -o last1.gro -b $MDps -boxcenter zero -center << EOF
